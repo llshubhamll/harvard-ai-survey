@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Harvard AI Usage Survey · 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --crimson:#A51C30; --crimson-dark:#7F1320; --crimson-light:#C23B52;
+  --navy:#0D1B2A; --navy2:#1A2E45;
+  --bg:#F8F7F4; --surface:#FFFFFF; --canvas:#F2EFE9;
+  --slate:#4A5568; --muted:#718096; --line:#E2E8F0;
+  --claude:#C8614A; --chatgpt:#0D9488; --gemini:#4A7FC1;
+  --cursor:#6B7280; --personal:#C0392B; --free:#94A3B8;
+  --inst:#2563EB; --lab:#16A34A;
+  --reliable:#2563EB; --caution:#D97706; --small:#E53E3E;
+}
+html{scroll-behavior:smooth;font-size:15px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+     background:var(--bg);color:var(--navy);line-height:1.6}
+
+/* ── Header ─────────────────────────────────────── */
+header{
+  background:var(--navy);color:#fff;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.hdr-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:62px;
+}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.shield{width:28px;height:35px;flex-shrink:0}
+.brand-text h1{font-size:1rem;font-weight:700;letter-spacing:-.01em}
+.brand-text p{font-size:.68rem;color:rgba(255,255,255,.5);
+              letter-spacing:.07em;text-transform:uppercase;margin-top:1px}
+.hdr-tag{font-size:.72rem;color:rgba(255,255,255,.4);
+         background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px}
+
+/* ── Hero ───────────────────────────────────────── */
+.hero{
+  background:linear-gradient(135deg,var(--crimson) 0%,var(--crimson-dark) 100%);
+  color:#fff;padding:2.8rem 2rem 2.4rem;
+}
+.hero-inner{max-width:1200px;margin:0 auto}
+.hero h2{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem}
+.hero p{font-size:.92rem;color:rgba(255,255,255,.78);max-width:620px;margin-bottom:2rem}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
+.kpi{
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+  border-radius:14px;padding:1.1rem 1.3rem;
+}
+.kpi .num{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.kpi .lbl{font-size:.7rem;color:rgba(255,255,255,.65);text-transform:uppercase;
+           letter-spacing:.07em;margin-top:.25rem}
+.kpi .sub{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:.1rem}
+
+/* ── Nav ────────────────────────────────────────── */
+nav.tabs{
+  background:var(--surface);border-bottom:1px solid var(--line);
+  overflow-x:auto;white-space:nowrap;
+}
+.tabs-inner{max-width:1200px;margin:0 auto;display:flex;padding:0 2rem}
+.tab{
+  display:inline-block;padding:.85rem 1.25rem;
+  font-size:.84rem;font-weight:500;color:var(--slate);
+  text-decoration:none;border-bottom:3px solid transparent;
+  transition:color .18s,border-color .18s;white-space:nowrap;
+}
+.tab:hover{color:var(--crimson)}
+.tab.active{color:var(--crimson);border-bottom-color:var(--crimson);font-weight:600}
+
+/* ── Main layout ────────────────────────────────── */
+main{max-width:1200px;margin:0 auto;padding:2.8rem 2rem 5rem}
+.section{margin-bottom:3.8rem;scroll-margin-top:120px}
+.sec-head{display:flex;align-items:center;gap:12px;
+          padding-bottom:.7rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.sec-dot{width:10px;height:10px;border-radius:50%;background:var(--crimson);flex-shrink:0}
+.sec-head h2{font-size:1.2rem;font-weight:700}
+.sec-desc{font-size:.87rem;color:var(--slate);max-width:760px;margin-bottom:1.5rem}
+
+/* ── Grid ───────────────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.g1{display:grid;grid-template-columns:1fr;gap:1.5rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ── Chart card ─────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+  transition:box-shadow .2s;
+}
+.card:hover{box-shadow:0 6px 28px rgba(0,0,0,.09)}
+.card-body{padding:1.3rem 1.3rem .6rem;background:var(--bg)}
+.card-cap{
+  padding:.65rem 1.1rem;font-size:.79rem;color:var(--slate);
+  border-top:1px solid var(--line);background:var(--canvas);
+}
+.card-cap strong{color:var(--navy)}
+
+/* ── Callout ────────────────────────────────────── */
+.callout{
+  background:#FFF8F0;border-left:4px solid #D4715A;
+  border-radius:0 10px 10px 0;padding:1rem 1.4rem;
+  margin-bottom:1.5rem;font-size:.88rem;line-height:1.55;
+}
+.callout strong{color:var(--crimson)}
+
+/* ── Reliability legend ─────────────────────────── */
+.rel-legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.77rem;
+            color:var(--slate);margin-bottom:1.2rem}
+.rdot{display:inline-block;width:9px;height:9px;border-radius:50%;
+      vertical-align:middle;margin-right:4px}
+
+/* ── Footer ─────────────────────────────────────── */
+footer{
+  background:var(--navy);color:rgba(255,255,255,.45);
+  text-align:center;padding:1.8rem;font-size:.77rem;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <svg class="shield" viewBox="0 0 100 120" fill="none">
+        <path d="M50 4L96 22v50Q96 100 50 116Q4 100 4 72V22Z"
+              fill="#A51C30" stroke="white" stroke-width="2.5"/>
+        <text x="50" y="48" text-anchor="middle" fill="white"
+              font-family="serif" font-size="13" font-weight="bold">VE-</text>
+        <text x="50" y="63" text-anchor="middle" fill="white"
+              font-family="serif" font-size="13" font-weight="bold">RI-</text>
+        <text x="50" y="78" text-anchor="middle" fill="white"
+              font-family="serif" font-size="13" font-weight="bold">TAS</text>
+      </svg>
+      <div class="brand-text">
+        <h1>Harvard AI Survey</h1>
+        <p>Generative AI in Research · 2026</p>
+      </div>
+    </div>
+    <div class="hdr-tag">n = 77 respondents</div>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <h2>AI Usage Survey — Harvard Researchers</h2>
+    <p>How Harvard graduate students, postdocs, faculty, and staff use AI tools in their research — who pays, what works, and what doesn't.</p>
+    <div class="kpi-row">
+      <div class="kpi"><div class="num">77</div><div class="lbl">Respondents</div><div class="sub">grad students, postdocs, faculty</div></div>
+      <div class="kpi"><div class="num">62%</div><div class="lbl">Use Claude</div><div class="sub">48 of 77 respondents</div></div>
+      <div class="kpi"><div class="num">86%</div><div class="lbl">Use ChatGPT</div><div class="sub">most widely adopted tool</div></div>
+      <div class="kpi"><div class="num">8.2<span style="font-size:1.1rem;font-weight:400"> / 10</span></div><div class="lbl">Avg. Productivity Rating</div><div class="sub">median = 8</div></div>
+      <div class="kpi"><div class="num">54%</div><div class="lbl">Claude Users Pay OOP</div><div class="sub">no institutional support</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav class="tabs">
+  <div class="tabs-inner">
+    <a class="tab active" href="#demographics">Demographics</a>
+    <a class="tab" href="#adoption">Tool Adoption</a>
+    <a class="tab" href="#boons">Boons &amp; Banes</a>
+    <a class="tab" href="#access">Access</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══ SECTION 1: DEMOGRAPHICS ═══ -->
+<section class="section" id="demographics">
+  <div class="sec-head"><div class="sec-dot"></div><h2>Demographics</h2></div>
+  <p class="sec-desc">Survey respondents skew heavily toward graduate students, with AI and Neuroscience as the most represented research fields.</p>
+  <div class="g2">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:280px">
+        <canvas id="c-roles"></canvas>
+      </div>
+      <div class="card-cap"><strong>Respondent Roles</strong> — n=77</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:280px">
+        <canvas id="c-fields"></canvas>
+      </div>
+      <div class="card-cap"><strong>Research Field Distribution</strong> — multi-select</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECTION 2: TOOL ADOPTION ═══ -->
+<section class="section" id="adoption">
+  <div class="sec-head"><div class="sec-dot"></div><h2>Tool Adoption</h2></div>
+  <p class="sec-desc">ChatGPT/Codex leads in raw usage, but Claude is preferred as the <em>most helpful</em> tool by 44% of respondents. Adoption patterns vary significantly by role and field.</p>
+
+  <div class="g2" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-adoption"></canvas>
+      </div>
+      <div class="card-cap"><strong>Overall AI Tool Adoption</strong> — number of users (multi-select, n=77)</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-helpful"></canvas>
+      </div>
+      <div class="card-cap"><strong>Most Helpful AI Tool</strong> — share of respondents citing as most useful (multi-select)</div>
+    </div>
+  </div>
+
+  <div class="rel-legend">
+    <span><span class="rdot" style="background:var(--reliable)"></span>Reliable (n ≥ 10)</span>
+    <span><span class="rdot" style="background:var(--caution)"></span>Caution △ (5 ≤ n &lt; 10)</span>
+    <span><span class="rdot" style="background:var(--small)"></span>Small ⚠ (n &lt; 5)</span>
+  </div>
+
+  <div class="g1" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:280px">
+        <canvas id="c-adopt-role"></canvas>
+      </div>
+      <div class="card-cap"><strong>Tool Adoption Rate by Role</strong> — % of respondents in each role using each tool</div>
+    </div>
+  </div>
+  <div class="g1">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:300px">
+        <canvas id="c-adopt-field"></canvas>
+      </div>
+      <div class="card-cap"><strong>Tool Adoption Rate by Research Field</strong> — % of respondents in each field using each tool</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECTION 3: BOONS & BANES ═══ -->
+<section class="section" id="boons">
+  <div class="sec-head"><div class="sec-dot"></div><h2>Boons and Banes</h2></div>
+  <p class="sec-desc">Researchers rate AI's productivity benefit highly (mean 8.2/10), use it most intensively for coding and editing, and cite hallucinations and cost as the biggest challenges.</p>
+
+  <div class="callout">
+    <strong>Key finding:</strong> 65% of respondents rated AI's productivity benefit at 8 or above, and 29% gave it a perfect 10. Coding assistance is by far the most intense use case (score 2.74 / 3.0).
+  </div>
+
+  <div class="g2" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:260px">
+        <canvas id="c-rating"></canvas>
+      </div>
+      <div class="card-cap"><strong>Perceived Productivity Benefit</strong> — distribution of 1–10 ratings (mean=8.2, median=8, n=75). Dashed line = mean.</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:260px">
+        <canvas id="c-stages"></canvas>
+      </div>
+      <div class="card-cap"><strong>AI Usage Intensity by Research Stage</strong> — mean frequency score (Never=0, Rarely=1, Occasionally=2, Frequently=3)</div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-prod-role"></canvas>
+      </div>
+      <div class="card-cap"><strong>Avg. Productivity Rating by Role</strong> — mean score on 1–10 scale. Color = sample size reliability.</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-prod-field"></canvas>
+      </div>
+      <div class="card-cap"><strong>Avg. Productivity Rating by Field</strong> — mean score on 1–10 scale. Color = sample size reliability.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:300px">
+        <canvas id="c-why"></canvas>
+      </div>
+      <div class="card-cap"><strong>Why Preferred Tool Works</strong> — open-text themes, n=45 responses</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:300px">
+        <canvas id="c-challenges"></canvas>
+      </div>
+      <div class="card-cap"><strong>Biggest Challenges</strong> — open-text themes, n=41 responses</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECTION 4: ACCESS ═══ -->
+<section class="section" id="access">
+  <div class="sec-head"><div class="sec-dot"></div><h2>Access &amp; Payment</h2></div>
+  <p class="sec-desc">A striking contrast: ChatGPT users mostly have institutional access, while Claude users predominantly pay out-of-pocket. Over half of Claude's users across all roles are self-funding.</p>
+
+  <div class="callout">
+    <strong>Key finding:</strong> 54% of Claude users pay personally out-of-pocket vs. only 23% for ChatGPT. Meanwhile 65% of ChatGPT users have institutional or lab funding, compared to just 29% for Claude.
+  </div>
+
+  <div class="g2" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-access-claude"></canvas>
+      </div>
+      <div class="card-cap"><strong>Claude — Access Type</strong> — how users pay for Claude (n=51 Claude users)</div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="position:relative;height:240px">
+        <canvas id="c-access-chatgpt"></canvas>
+      </div>
+      <div class="card-cap"><strong>ChatGPT — Access Type</strong> — how users pay for ChatGPT/Codex (n=66 users)</div>
+    </div>
+  </div>
+
+  <div class="rel-legend">
+    <span><span class="rdot" style="background:var(--reliable)"></span>Reliable (n ≥ 10)</span>
+    <span><span class="rdot" style="background:var(--caution)"></span>Caution △ (5 ≤ n &lt; 10)</span>
+    <span><span class="rdot" style="background:var(--small)"></span>Small ⚠ (n &lt; 5)</span>
+  </div>
+
+  <div class="g1" style="margin-bottom:1.5rem">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:340px">
+        <canvas id="c-access-field"></canvas>
+      </div>
+      <div class="card-cap"><strong>Claude Access Type by Research Field</strong> — share of Claude users in each field by payment method</div>
+    </div>
+  </div>
+  <div class="g1">
+    <div class="card">
+      <div class="card-body" style="position:relative;height:260px">
+        <canvas id="c-access-role"></canvas>
+      </div>
+      <div class="card-cap"><strong>Claude Access Type by Role</strong> — share of Claude users in each role by payment method</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Harvard University · Generative AI Survey in Academic Research · 2026 · n=77 respondents
+</footer>
+
+<script>
+// ── Design tokens ────────────────────────────────────────────────────────
+const C = {
+  navy:'#0D1B2A', slate:'#4A5568', dark:'#1A202C', line:'#E2E8F0',
+  crimson:'#A51C30',
+  claude:'#C8614A', chatgpt:'#0D9488', gemini:'#4A7FC1',
+  cursor:'#6B7280',
+  personal:'#C0392B', free:'#94A3B8', inst:'#2563EB', lab:'#16A34A',
+  reliable:'#2563EB', caution:'#D97706', small:'#E53E3E',
+};
+const PAY_COLORS = [C.free, C.personal, C.inst, C.lab];
+const PAY_LABELS = ['Free tier','Personal','Institutional','Lab/PI'];
+
+// ── Global Chart.js defaults ─────────────────────────────────────────────
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = C.slate;
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display = false;
+
+// ── Global reference-line plugin (replaces all inline plugins) ───────────
+// Reads config from chart.options.plugins.refLine — safe, no cascade risk
+Chart.register({
+  id:'refLine',
+  afterDraw(ch){
+    const rl = ch.options && ch.options.plugins && ch.options.plugins.refLine;
+    if(!rl) return;
+    try{
+      const ctx=ch.ctx, chartArea=ch.chartArea, scales=ch.scales;
+      if(!chartArea||!scales) return;
+      const axis=rl.axis||'x';
+      const sc=scales[axis];
+      if(!sc) return;
+      let pos;
+      if(rl.catIndex!=null){
+        // Category axis: manual interpolation for fractional bar index
+        const n=sc.ticks?sc.ticks.length:10;
+        if(axis==='x') pos=chartArea.left+(rl.catIndex+0.5)/n*(chartArea.right-chartArea.left);
+        else           pos=chartArea.top +(rl.catIndex+0.5)/n*(chartArea.bottom-chartArea.top);
+      }else{
+        pos=sc.getPixelForValue(rl.value);
+      }
+      if(!isFinite(pos)) return;
+      ctx.save();
+      ctx.strokeStyle=rl.color||'#666';
+      ctx.lineWidth=rl.lineWidth||1.5;
+      ctx.setLineDash(rl.dash||[4,3]);
+      ctx.beginPath();
+      if(axis==='x'){ctx.moveTo(pos,chartArea.top);ctx.lineTo(pos,chartArea.bottom);}
+      else          {ctx.moveTo(chartArea.left,pos);ctx.lineTo(chartArea.right,pos);}
+      ctx.stroke();
+      if(rl.label){
+        ctx.fillStyle=rl.color||'#666';
+        ctx.font=rl.font||'10px sans-serif';
+        ctx.fillText(rl.label, pos+4, chartArea.top+12);
+      }
+      ctx.restore();
+    }catch(e){}
+  }
+});
+
+function pct(n, total) { return total ? Math.round(n / total * 100) : 0; }
+function tierColor(n) { return n >= 10 ? C.reliable : n >= 5 ? C.caution : C.small; }
+
+// ─────────────────────────────────────────────────────────────────────────
+// 1. RESPONDENT ROLES
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-roles', {type:'bar',
+  data:{
+    labels:['Graduate Student\n(Master\'s/PhD)','Postdoctoral\nResearcher','Faculty/\nProfessor','Other','Research Staff/\nScientist','Undergraduate\nStudent'],
+    datasets:[{
+      data:[49,11,5,4,4,4],
+      backgroundColor:['#F5A623','#E05C4F','#9B59B6','#27AE60','#E67E22','#3498DB'],
+      borderRadius:5, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{right:35}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'right',
+                  font:{weight:'bold',size:12}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{color:C.line}, title:{display:true,text:'Number of Respondents',font:{size:10}}},
+      y:{grid:{display:false}, ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 2. RESEARCH FIELDS
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-fields', {type:'bar',
+  data:{
+    labels:['AI','Neuroscience','Math /\nStatistics','Social\nSciences','Engineering /\nPhysics','Biology /\nLife Sci','Other /\nAdmin','Humanities','Medicine /\nHealth'],
+    datasets:[{
+      data:[50,33,11,6,5,4,1,1,1],
+      backgroundColor:['#3498DB','#F5A623','#27AE60','#E05C4F','#9B59B6','#E67E22','#95A5A6','#C0392B','#1ABC9C'],
+      borderRadius:5, borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:22}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'top',
+                  font:{weight:'bold',size:11}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{size:9},maxRotation:25}},
+      y:{grid:{color:C.line}, title:{display:true,text:'Respondents (multi-select)',font:{size:10}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 3. TOOL ADOPTION OVERALL
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-adoption', {type:'bar',
+  data:{
+    labels:['ChatGPT/\nCodex','Claude','Gemini /\nOther Google','Cursor /\nCopilot','DeepSeek'],
+    datasets:[{
+      data:[66,48,44,4,1],
+      backgroundColor:[C.chatgpt+'CC',C.claude+'CC',C.gemini+'CC',C.cursor+'CC','#8B5CF6CC'],
+      borderColor:[C.chatgpt,C.claude,C.gemini,C.cursor,'#8B5CF6'],
+      borderWidth:1, borderRadius:6, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{right:35}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'right',
+                  font:{weight:'bold',size:12}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{color:C.line}, title:{display:true,text:'Number of Users (multi-select)',font:{size:10}}, max:80},
+      y:{grid:{display:false}, ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 4. MOST HELPFUL TOOL — PIE
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-helpful', {type:'doughnut',
+  data:{
+    labels:['Claude','ChatGPT/Codex','Gemini','Cursor/Copilot','Other'],
+    datasets:[{
+      data:[44,41,10,3,1],
+      backgroundColor:[C.claude+'DD',C.chatgpt+'DD',C.gemini+'DD',C.cursor+'DD','#8B5CF6DD'],
+      borderWidth:2, borderColor:'#fff',
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    cutout:'52%',
+    plugins:{
+      legend:{display:true, position:'right',
+              labels:{usePointStyle:true, pointStyle:'circle', boxWidth:10, font:{size:10}, padding:14}},
+      datalabels:{display:true, formatter:(v,ctx)=>{
+        return v >= 5 ? v+'%' : '';
+      }, color:'#fff', font:{weight:'bold',size:12}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 5. TOOL ADOPTION BY ROLE
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const roles = ['Grad Student\n(n=49)','Postdoc\n(n=11)','Faculty\n(n=5)','Other/Staff\n(n=8)'];
+  const claudeData = [58,64,80,75];
+  const chatgptData = [91,73,60,88];
+  const geminiData = [55,73,40,50];
+  new Chart('c-adopt-role', {type:'bar',
+    data:{
+      labels:roles,
+      datasets:[
+        {label:'Claude', data:claudeData, backgroundColor:C.claude+'BB', borderColor:C.claude, borderWidth:1, borderRadius:4},
+        {label:'ChatGPT/Codex', data:chatgptData, backgroundColor:C.chatgpt+'BB', borderColor:C.chatgpt, borderWidth:1, borderRadius:4},
+        {label:'Gemini', data:geminiData, backgroundColor:C.gemini+'BB', borderColor:C.gemini, borderWidth:1, borderRadius:4},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:24}},
+      plugins:{
+        legend:{display:true, position:'top',
+                labels:{usePointStyle:true, pointStyle:'rectRounded', boxWidth:12, font:{size:10}}},
+        datalabels:{display:true, anchor:'end', align:'top',
+                    formatter:v=>v+'%', font:{weight:'bold',size:9}, color:C.dark}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:9},maxRotation:0}},
+        y:{max:105, ticks:{callback:v=>v+'%'}, grid:{color:C.line}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 6. TOOL ADOPTION BY FIELD
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const fields = ['AI\n(n=50)','Neuroscience\n(n=33)','Math/Stat\n(n=11)','Social Sci\n(n=6)','Biology\n(n=4)','Eng/Physics\n(n=5)'];
+  new Chart('c-adopt-field', {type:'bar',
+    data:{
+      labels:fields,
+      datasets:[
+        {label:'Claude', data:[72,79,45,83,0,20], backgroundColor:C.claude+'BB', borderColor:C.claude, borderWidth:1, borderRadius:4},
+        {label:'ChatGPT/Codex', data:[90,88,91,83,50,80], backgroundColor:C.chatgpt+'BB', borderColor:C.chatgpt, borderWidth:1, borderRadius:4},
+        {label:'Gemini', data:[64,55,45,50,75,20], backgroundColor:C.gemini+'BB', borderColor:C.gemini, borderWidth:1, borderRadius:4},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:24}},
+      plugins:{
+        legend:{display:true, position:'top',
+                labels:{usePointStyle:true, pointStyle:'rectRounded', boxWidth:12, font:{size:10}}},
+        datalabels:{display:true, anchor:'end', align:'top',
+                    formatter:v=>v+'%', font:{weight:'bold',size:9}, color:C.dark}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:9},maxRotation:0}},
+        y:{max:108, ticks:{callback:v=>v+'%'}, grid:{color:C.line}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 7. PRODUCTIVITY RATING DISTRIBUTION
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const avgR = 8.2;
+  const colors = ['#E05C4F','#E05C4F','#E88B40','#F5A623','#F5D020',
+                  '#A3BE47','#7DC84E','#4CAF50','#27AE60','#1E8449'];
+  new Chart('c-rating', {type:'bar',
+    data:{
+      labels:[1,2,3,4,5,6,7,8,9,10],
+      datasets:[{
+        data:[1,1,1,1,1,5,6,27,10,22],
+        backgroundColor:colors.map(c=>c+'CC'),
+        borderColor:colors, borderWidth:1, borderRadius:4, borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:22}},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:c=>(c.parsed&&c.parsed.y>0), anchor:'end', align:'top',
+                    font:{weight:'bold',size:10}, color:C.dark},
+        refLine:{catIndex:7.2, label:'Mean = 8.2', color:'#333', lineWidth:2, dash:[5,4]}
+      },
+      scales:{
+        x:{grid:{display:false},
+           title:{display:true,text:'Productivity Benefit Rating (1–10)',font:{size:10}}},
+        y:{title:{display:true,text:'Number of Respondents',font:{size:10}},
+           grid:{color:C.line}, ticks:{stepSize:5}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 8. AI USAGE BY RESEARCH STAGE
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-stages', {type:'bar',
+  data:{
+    labels:['Coding','Editing /\nProofreading','Lit Review','Visualizations','Data Analysis','Manuscript\nDrafting','Idea\nGeneration','Grant Writing'],
+    datasets:[{
+      data:[2.74,2.34,2.23,1.96,1.91,1.73,1.71,1.44],
+      backgroundColor:'#4A7FC1BB', borderColor:'#4A7FC1', borderWidth:1, borderRadius:4, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{right:42}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'right',
+                  formatter:v=>v.toFixed(2), font:{weight:'bold',size:10}, color:C.dark}
+    },
+    scales:{
+      x:{min:0, max:3.2,
+         title:{display:true,text:'Mean Frequency Score  (Rarely=1, Occasionally=2, Frequently=3)',font:{size:10}},
+         grid:{color:C.line},
+         ticks:{callback:v=>['Never','Rarely','Occasionally','Frequently'][v]||'', maxTicksLimit:4}},
+      y:{grid:{display:false}, ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 9. PRODUCTIVITY BY ROLE
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const pts = [
+    {label:'Faculty\n(n=5)',    val:9.2,  n:5},
+    {label:'Grad Student\n(n=51)', val:8.2, n:51},
+    {label:'Other/Staff\n(n=8)', val:8.0,  n:8},
+    {label:'Postdoc\n(n=11)',   val:7.8,  n:11},
+  ];
+  const avgR = 8.2;
+  new Chart('c-prod-role', {type:'bar',
+    data:{
+      labels: pts.map(p=>p.label),
+      datasets:[{
+        data: pts.map(p=>p.val),
+        backgroundColor: pts.map(p=>tierColor(p.n)+'55'),
+        borderColor: pts.map(p=>tierColor(p.n)),
+        borderWidth:2, borderRadius:4,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      layout:{padding:{right:42}},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:true, anchor:'end', align:'right',
+                    formatter:v=>v.toFixed(1), font:{weight:'bold',size:11}, color:C.dark},
+        refLine:{axis:'x', value:avgR, label:'Overall: '+avgR, color:C.slate, lineWidth:1.5}
+      },
+      scales:{
+        x:{min:6, max:11,
+           title:{display:true,text:'Mean Productivity Rating (1–10 scale)',font:{size:10}},
+           grid:{color:C.line}, ticks:{callback:v=>v+' / 10'}},
+        y:{grid:{display:false}, ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 10. PRODUCTIVITY BY FIELD
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const pts = [
+    {label:'Social Sciences\n(n=6)',    val:9.2, n:6},
+    {label:'Eng/Physics\n(n=5)',         val:8.8, n:5},
+    {label:'AI\n(n=49)',                 val:8.5, n:49},
+    {label:'Math/Statistics\n(n=11)',    val:8.5, n:11},
+    {label:'Neuroscience\n(n=33)',       val:8.2, n:33},
+    {label:'Biology\n(n=3)',             val:7.3, n:3},
+  ];
+  const avgR = 8.2;
+  new Chart('c-prod-field', {type:'bar',
+    data:{
+      labels: pts.map(p=>p.label),
+      datasets:[{
+        data: pts.map(p=>p.val),
+        backgroundColor: pts.map(p=>tierColor(p.n)+'55'),
+        borderColor: pts.map(p=>tierColor(p.n)),
+        borderWidth:2, borderRadius:4,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      layout:{padding:{right:42}},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:true, anchor:'end', align:'right',
+                    formatter:v=>v.toFixed(1), font:{weight:'bold',size:11}, color:C.dark},
+        refLine:{axis:'x', value:avgR, label:'Overall: '+avgR, color:C.slate, lineWidth:1.5}
+      },
+      scales:{
+        x:{min:6, max:11,
+           title:{display:true,text:'Mean Productivity Rating (1–10 scale)',font:{size:10}},
+           grid:{color:C.line}, ticks:{callback:v=>v+' / 10'}},
+        y:{grid:{display:false}, ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 11. WHY PREFERRED TOOL WORKS
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-why', {type:'bar',
+  data:{
+    labels:['Coding /\nClaude Code','Response quality\n/ reasoning','Familiarity /\nfirst used','Cost /\nfree access','IDE\nintegration','Writing\n& editing','Multi-task\nversatility','Source citation\nability'],
+    datasets:[{
+      data:[22,8,7,4,3,3,2,2],
+      backgroundColor:'#3B82F6BB', borderColor:'#3B82F6', borderWidth:1, borderRadius:4, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{right:35}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'right',
+                  font:{weight:'bold',size:11}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{color:C.line}, title:{display:true,text:'Mentions',font:{size:10}}},
+      y:{grid:{display:false}, ticks:{font:{size:9}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 12. BIGGEST CHALLENGES
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-challenges', {type:'bar',
+  data:{
+    labels:['Hallucinations /\naccuracy','Cost /\naccess limits','Trust &\nverification burden','Workflow\nintegration','Figure\ngeneration','Prompting\ndifficulty','Agency /\nover-reliance','Confidentiality\nconcerns','Context\nmanagement'],
+    datasets:[{
+      data:[10,9,6,4,3,3,2,2,2],
+      backgroundColor:'#E05C4FBB', borderColor:'#E05C4F', borderWidth:1, borderRadius:4, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{right:35}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'right',
+                  font:{weight:'bold',size:11}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{color:C.line}, title:{display:true,text:'Mentions',font:{size:10}}},
+      y:{grid:{display:false}, ticks:{font:{size:9}}}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 13. ACCESS — CLAUDE
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-access-claude', {type:'bar',
+  data:{
+    labels:['Personal\n(out-of-pocket)','Free tier','Institutional','Lab/PI'],
+    datasets:[{
+      data:[26,10,8,7],
+      backgroundColor:[C.personal+'CC', C.free+'CC', C.inst+'CC', C.lab+'CC'],
+      borderColor:[C.personal, C.free, C.inst, C.lab],
+      borderWidth:1, borderRadius:5, borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:24}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'top',
+                  font:{weight:'bold',size:12}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{size:10}}},
+      y:{grid:{color:C.line}, title:{display:true,text:'Respondents',font:{size:10}}, max:32}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 14. ACCESS — CHATGPT
+// ─────────────────────────────────────────────────────────────────────────
+new Chart('c-access-chatgpt', {type:'bar',
+  data:{
+    labels:['Institutional','Personal\n(out-of-pocket)','Free tier','Lab/PI'],
+    datasets:[{
+      data:[43,16,7,3],
+      backgroundColor:[C.inst+'CC', C.personal+'CC', C.free+'CC', C.lab+'CC'],
+      borderColor:[C.inst, C.personal, C.free, C.lab],
+      borderWidth:1, borderRadius:5, borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:24}},
+    plugins:{
+      legend:{display:false},
+      datalabels:{display:true, anchor:'end', align:'top',
+                  font:{weight:'bold',size:12}, color:C.dark}
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{size:10}}},
+      y:{grid:{color:C.line}, title:{display:true,text:'Respondents',font:{size:10}}, max:52}
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 15. CLAUDE ACCESS BY FIELD — STACKED
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const fieldLabels = [
+    'AI  n=38 Claude / 50 total',
+    'Neuroscience  n=27 / 33',
+    'Social Sciences  n=6 / 6  △',
+    'Math/Statistics  n=5 / 11  △',
+    'Eng/Physics  n=1 / 5  ⚠',
+    'Biology  n=1 / 4  ⚠',
+  ];
+  // [Free tier, Personal, Institutional, Lab/PI]
+  const fieldData = [
+    [18,50,16,16],
+    [22,52, 4,22],
+    [17,50,17,17],
+    [ 0,80, 0,20],
+    [ 0,100,0, 0],
+    [ 0, 0,100,0],
+  ];
+  new Chart('c-access-field', {type:'bar',
+    data:{
+      labels: fieldLabels,
+      datasets: PAY_LABELS.map((lbl,i)=>({
+        label: lbl,
+        data: fieldData.map(row=>row[i]),
+        backgroundColor: PAY_COLORS[i]+'BB',
+        borderColor: PAY_COLORS[i],
+        borderWidth:1,
+      }))
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, position:'bottom',
+                labels:{usePointStyle:true, pointStyle:'rectRounded', boxWidth:12, font:{size:10}}},
+        datalabels:{
+          display:c=>(c.parsed&&c.parsed.x>=8),
+          anchor:'center', align:'center',
+          formatter:v=>v+'%', color:'white', font:{weight:'bold',size:9}
+        },
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed?c.parsed.x:0}%`}}
+      },
+      scales:{
+        x:{stacked:true, max:103, ticks:{callback:v=>v+'%'}, grid:{color:C.line}},
+        y:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 16. CLAUDE ACCESS BY ROLE — STACKED
+// ─────────────────────────────────────────────────────────────────────────
+{
+  const roleLabels = [
+    'Grad Student  n=33 / 53',
+    'Postdoc  n=8 / 11  △',
+    'Other/Staff  n=6 / 8  △',
+    'Faculty  n=4 / 5  △',
+  ];
+  // [Free tier, Personal, Institutional, Lab/PI]
+  const roleData = [
+    [24,48,15,12],
+    [12,38,25,25],
+    [17,67,17, 0],
+    [ 0,75, 0,25],
+  ];
+  new Chart('c-access-role', {type:'bar',
+    data:{
+      labels: roleLabels,
+      datasets: PAY_LABELS.map((lbl,i)=>({
+        label: lbl,
+        data: roleData.map(row=>row[i]),
+        backgroundColor: PAY_COLORS[i]+'BB',
+        borderColor: PAY_COLORS[i],
+        borderWidth:1,
+      }))
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, position:'bottom',
+                labels:{usePointStyle:true, pointStyle:'rectRounded', boxWidth:12, font:{size:10}}},
+        datalabels:{
+          display:c=>(c.parsed&&c.parsed.x>=8),
+          anchor:'center', align:'center',
+          formatter:v=>v+'%', color:'white', font:{weight:'bold',size:9}
+        },
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed?c.parsed.x:0}%`}}
+      },
+      scales:{
+        x:{stacked:true, max:103, ticks:{callback:v=>v+'%'}, grid:{color:C.line}},
+        y:{stacked:true, grid:{display:false}, ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Active nav on scroll
+// ─────────────────────────────────────────────────────────────────────────
+document.querySelectorAll('section[id]').forEach(sec=>{
+  new IntersectionObserver(([e])=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      const a = document.querySelector(`.tab[href="#${sec.id}"]`);
+      if(a) a.classList.add('active');
+    }
+  },{rootMargin:'-5% 0px -70% 0px'}).observe(sec);
+});
+</script>
+</body>
+</html>
